@@ -3,303 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบงาน Line OA</title>
+    <title>ระบบบันทึกงาน</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Sarabun', sans-serif; }
-        .hidden { display: none; }
+        /* CSS สไตล์เดียวกับ booking.html */
+        body { font-family: sans-serif; background: #f5f6fa; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100 p-4 text-gray-800">
+<body class="p-4">
 
-    <div id="loading" class="flex flex-col items-center justify-center mt-20">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div>
-        <p class="mt-4 text-gray-500 animate-pulse">กำลังเชื่อมต่อระบบ...</p>
+    <div id="loading" class="loading-overlay">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        <p id="loading-text" class="mt-4 text-gray-600">กำลังโหลด...</p>
     </div>
 
-    <div id="register-section" class="hidden max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
-        <h2 class="text-xl font-bold mb-4 text-blue-600 text-center">📝 ลงทะเบียนสมาชิกใหม่</h2>
-        <form id="regForm" onsubmit="handleRegister(event)" class="space-y-3">
-            <input type="text" id="regName" placeholder="ชื่อ-นามสกุล" class="w-full border p-3 rounded bg-gray-50" required>
-            <input type="text" id="regPos" placeholder="ตำแหน่ง" class="w-full border p-3 rounded bg-gray-50" required>
-            <input type="text" id="regDept" placeholder="ฝ่าย" class="w-full border p-3 rounded bg-gray-50" required>
-            <input type="text" id="regOrg" placeholder="สังกัด" class="w-full border p-3 rounded bg-gray-50" required>
-            <input type="email" id="regEmail" placeholder="อีเมล" class="w-full border p-3 rounded bg-gray-50" required>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded font-bold shadow">ยืนยันการลงทะเบียน</button>
-        </form>
-    </div>
-
-    <div id="guest-view" class="hidden text-center mt-20 px-4">
-        <div class="text-6xl mb-4">⏳</div>
-        <h2 class="text-2xl font-bold text-gray-700">รอการอนุมัติ</h2>
-        <p class="text-gray-500 mt-2">ข้อมูลของคุณเข้าระบบแล้ว<br>กรุณารอแอดมินปรับสถานะ</p>
-    </div>
-
-    <div id="main-menu" class="hidden max-w-md mx-auto">
-        <div class="bg-white rounded-xl shadow p-4 mb-4 flex justify-between items-center border-l-4 border-blue-500">
-            <div>
-                <p class="text-xs text-gray-400">ยินดีต้อนรับ</p>
-                <p class="font-bold text-lg text-gray-800" id="display-name">...</p>
-            </div>
-            <span class="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full" id="display-role">USER</span>
+    <div id="app-container" class="hidden max-w-md mx-auto">
+        
+        <div id="register-section" class="hidden bg-white p-6 rounded-xl shadow-md">
+            <h2 class="text-xl font-bold text-blue-600 mb-4 text-center">ลงทะเบียนใช้งาน</h2>
+            <form id="form-register" class="space-y-3">
+                <input type="text" id="regName" placeholder="ชื่อ-นามสกุล" class="w-full border p-2 rounded" required>
+                <input type="text" id="regPos" placeholder="ตำแหน่ง" class="w-full border p-2 rounded" required>
+                <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded font-bold">ยืนยัน</button>
+            </form>
         </div>
 
-        <div class="grid grid-cols-1 gap-4">
-            <button onclick="showTaskForm()" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-between">
-                <span class="text-lg font-bold">📝 บันทึกตารางงาน</span>
-                <span class="text-2xl">›</span>
-            </button>
-            <button onclick="loadMyTasks()" class="bg-gradient-to-r from-teal-500 to-teal-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-between">
-                <span class="text-lg font-bold">📅 งานของฉัน</span>
-                <span class="text-2xl">›</span>
-            </button>
+        <div id="guest-section" class="hidden text-center mt-10">
+            <h2 class="text-2xl">⏳</h2>
+            <p class="font-bold text-gray-700">รอการอนุมัติสิทธิ์</p>
+            <p class="text-sm text-gray-500">กรุณาติดต่อ Admin</p>
         </div>
-    </div>
 
-    <div id="task-form" class="hidden max-w-md mx-auto bg-white rounded-xl shadow-lg p-6 mt-2">
-        <h3 class="font-bold text-xl mb-4 text-gray-700 border-b pb-2">บันทึกงานใหม่</h3>
-        <div class="space-y-3">
-            <div>
-                <label class="text-xs text-gray-500 font-bold">ประเภทงาน</label>
-                <select id="tType" class="w-full border p-2 rounded bg-gray-50">
-                    <option value="ทั่วไป">📌 ทั่วไป</option>
-                    <option value="ประชุม">🗣️ ประชุม</option>
-                    <option value="อยู่เวร">👮 อยู่เวร</option>
-                    <option value="ส่งหนังสือ">📂 ส่งหนังสือ</option>
-                    <option value="ออกพื้นที่">🚗 ออกพื้นที่</option>
-                </select>
-            </div>
-            <div>
-                <label class="text-xs text-gray-500 font-bold">หัวข้อ</label>
-                <input type="text" id="tTopic" class="w-full border p-2 rounded bg-gray-50">
-            </div>
-            <div>
-                <label class="text-xs text-gray-500 font-bold">รายละเอียด</label>
-                <textarea id="tDetail" class="w-full border p-2 rounded bg-gray-50" rows="2"></textarea>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="text-xs text-gray-500 font-bold">เริ่ม</label>
-                    <input type="datetime-local" id="tStart" class="w-full border p-2 rounded text-sm bg-gray-50">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-500 font-bold">สิ้นสุด</label>
-                    <input type="datetime-local" id="tEnd" class="w-full border p-2 rounded text-sm bg-gray-50">
-                </div>
+        <div id="main-menu" class="hidden space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow flex justify-between items-center">
+                <span class="font-bold" id="user-name">...</span>
+                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded" id="user-role">USER</span>
             </div>
             
-            <div class="bg-blue-50 p-3 rounded border border-blue-100 dashed">
-                <label class="text-xs text-blue-600 font-bold mb-1 block">📎 แนบไฟล์/รูปภาพ (Max 5MB)</label>
-                <input type="file" id="tFile" class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200">
-            </div>
-
-            <div>
-                <label class="text-xs text-gray-500 font-bold">หมายเหตุ</label>
-                <input type="text" id="tNote" class="w-full border p-2 rounded bg-gray-50">
-            </div>
-
-            <div class="flex gap-2 pt-4">
-                <button id="btnSave" onclick="submitTask()" class="flex-1 bg-blue-600 text-white p-3 rounded-lg font-bold shadow hover:bg-blue-700">บันทึก</button>
-                <button onclick="resetToMenu()" class="flex-1 bg-gray-200 text-gray-700 p-3 rounded-lg font-bold hover:bg-gray-300">ยกเลิก</button>
-            </div>
+            <button onclick="showPage('task-form')" class="w-full bg-blue-600 text-white p-4 rounded-xl shadow font-bold text-left">
+                📝 บันทึกงานใหม่
+            </button>
+            <button onclick="loadTasks()" class="w-full bg-teal-500 text-white p-4 rounded-xl shadow font-bold text-left">
+                📅 งานของฉัน
+            </button>
         </div>
-    </div>
 
-    <div id="task-list-view" class="hidden max-w-md mx-auto mt-2">
-        <div class="flex justify-between items-center mb-2">
-            <h3 class="font-bold text-lg text-gray-700">ประวัติงานล่าสุด</h3>
-            <button onclick="resetToMenu()" class="text-sm text-blue-600 underline">กลับหน้าหลัก</button>
+        <div id="task-form" class="hidden bg-white p-6 rounded-xl shadow-md mt-2">
+            <h3 class="font-bold text-lg mb-4">บันทึกงาน</h3>
+            <form id="form-task" class="space-y-3">
+                <select id="tType" class="w-full border p-2 rounded bg-gray-50">
+                    <option value="ทั่วไป">ทั่วไป</option>
+                    <option value="ประชุม">ประชุม</option>
+                    <option value="ออกพื้นที่">ออกพื้นที่</option>
+                </select>
+                <input type="text" id="tTopic" placeholder="หัวข้อ" class="w-full border p-2 rounded" required>
+                <textarea id="tDetail" placeholder="รายละเอียด" class="w-full border p-2 rounded"></textarea>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="datetime-local" id="tStart" class="border p-2 rounded text-sm">
+                    <input type="datetime-local" id="tEnd" class="border p-2 rounded text-sm">
+                </div>
+                <input type="file" id="tFile" class="text-sm">
+                
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded">บันทึก</button>
+                    <button type="button" onclick="showPage('main-menu')" class="flex-1 bg-gray-200 p-2 rounded">กลับ</button>
+                </div>
+            </form>
         </div>
-        <div id="task-container" class="space-y-3 pb-10"></div>
+
+        <div id="task-list" class="hidden space-y-3 mt-2">
+            <button onclick="showPage('main-menu')" class="text-sm text-blue-500 underline mb-2">กลับหน้าหลัก</button>
+            <div id="task-container"></div>
+        </div>
+
     </div>
 
     <script>
-        // *** ตั้งค่า config ตรงนี้ ***
         const LIFF_ID = "https://liff.line.me/2008677450-DMy5BGWi"; 
         const GAS_URL = "https://script.google.com/macros/s/AKfycbzRdoj5OhD4XzY7to3dPnFkIrPPOEYxCyX4vdgfycCGGPYalhPQ-qG9-eMJpO4H5Zdj/exec";
+        let userProfile = null;
 
-        let currentUserId = "";
-
-        // เริ่มต้นระบบ
-        async function main() {
-            await liff.init({ liffId: LIFF_ID });
-            if (!liff.isLoggedIn()) { liff.login(); return; }
-            const profile = await liff.getProfile();
-            currentUserId = profile.userId;
-            checkUserAuth();
-        }
-
-        // เช็คสิทธิ์
-        function checkUserAuth() {
-            fetch(GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: "check_auth", userId: currentUserId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('loading').classList.add('hidden');
-                if (!data.found) {
-                    document.getElementById('register-section').classList.remove('hidden');
-                } else {
-                    if (data.user.role === 'guest') {
-                        document.getElementById('guest-view').classList.remove('hidden');
-                    } else {
-                        document.getElementById('main-menu').classList.remove('hidden');
-                        document.getElementById('display-name').innerText = data.user.name;
-                        document.getElementById('display-role').innerText = data.user.role.toUpperCase();
-                    }
+        // Init function เหมือน booking.html
+        async function init() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
                 }
-            });
+                userProfile = await liff.getProfile();
+                checkRole();
+            } catch (err) {
+                alert("Init Error: " + err.message);
+            }
         }
 
-        // ลงทะเบียน
-        function handleRegister(e) {
+        // Service: Check Role
+        async function checkRole() {
+            toggleLoading(true, "ตรวจสอบสิทธิ์...");
+            const res = await callAPI('check_role', { userId: userProfile.userId });
+            toggleLoading(false);
+
+            document.getElementById('app-container').classList.remove('hidden');
+
+            if (!res.found) {
+                showPage('register-section');
+            } else if (res.user.role === 'guest') {
+                showPage('guest-section');
+            } else {
+                document.getElementById('user-name').innerText = res.user.name;
+                document.getElementById('user-role').innerText = res.user.role.toUpperCase();
+                showPage('main-menu');
+            }
+        }
+
+        // Handle Register Submit
+        document.getElementById('form-register').addEventListener('submit', async (e) => {
             e.preventDefault();
-            toggleLoading(true);
+            toggleLoading(true, "กำลังลงทะเบียน...");
             const payload = {
-                action: "register",
-                userId: currentUserId,
+                userId: userProfile.userId,
                 name: document.getElementById('regName').value,
                 position: document.getElementById('regPos').value,
-                department: document.getElementById('regDept').value,
-                organization: document.getElementById('regOrg').value,
-                email: document.getElementById('regEmail').value
+                // เพิ่ม field อื่นๆ ได้ที่นี่
             };
-            fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) })
-            .then(res => res.json())
-            .then(data => {
-                toggleLoading(false);
-                document.getElementById('register-section').classList.add('hidden');
-                document.getElementById('guest-view').classList.remove('hidden');
-            });
+            const res = await callAPI('register_user', payload);
+            toggleLoading(false);
+            if(res.status === 'success') showPage('guest-section');
+        });
+
+        // Handle Task Submit
+        document.getElementById('form-task').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            toggleLoading(true, "กำลังบันทึก...");
+            
+            // File Handling
+            let fileData = "", fileName = "", mimeType = "";
+            const fileInput = document.getElementById('tFile');
+            if(fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileData = await getBase64(file);
+                fileName = file.name;
+                mimeType = file.type;
+            }
+
+            const payload = {
+                userId: userProfile.userId,
+                type: document.getElementById('tType').value,
+                topic: document.getElementById('tTopic').value,
+                detail: document.getElementById('tDetail').value,
+                timeStart: document.getElementById('tStart').value,
+                timeEnd: document.getElementById('tEnd').value,
+                fileData, fileName, mimeType
+            };
+
+            const res = await callAPI('save_task', payload);
+            toggleLoading(false);
+            
+            if(res.status === 'success') {
+                alert("บันทึกสำเร็จ!");
+                e.target.reset();
+                showPage('main-menu');
+            } else {
+                alert("Error: " + res.message);
+            }
+        });
+
+        // Load Tasks
+        async function loadTasks() {
+            showPage('task-list');
+            toggleLoading(true, "ดึงข้อมูล...");
+            const res = await callAPI('get_my_tasks', { userId: userProfile.userId });
+            toggleLoading(false);
+            
+            const container = document.getElementById('task-container');
+            container.innerHTML = "";
+            if(res.tasks && res.tasks.length > 0) {
+                res.tasks.forEach(t => {
+                    let dateStr = t.start ? new Date(t.start).toLocaleDateString('th-TH') : "";
+                    container.innerHTML += `
+                        <div class="bg-white p-3 rounded shadow border-l-4 border-blue-500">
+                            <div class="font-bold">${t.topic}</div>
+                            <div class="text-xs text-gray-500">${dateStr} (${t.type})</div>
+                            <div class="text-xs text-right text-yellow-600 font-bold">${t.status}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = "<p class='text-center text-gray-400'>ไม่มีข้อมูล</p>";
+            }
         }
 
-        // แปลงไฟล์เป็น Base64
-        const fileToBase64 = file => new Promise((resolve, reject) => {
+        // --- Utils Helper (เหมือน booking.html) ---
+        async function callAPI(action, data) {
+            try {
+                const payload = { action, ...data };
+                const res = await fetch(GAS_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify(payload) 
+                });
+                return await res.json();
+            } catch (err) {
+                alert("API Error: " + err);
+                return { status: 'error' };
+            }
+        }
+
+        function toggleLoading(show, text = "กำลังโหลด...") {
+            const el = document.getElementById('loading');
+            document.getElementById('loading-text').innerText = text;
+            if(show) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+
+        function showPage(pageId) {
+            ['register-section', 'guest-section', 'main-menu', 'task-form', 'task-list'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        const getBase64 = (file) => new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = () => resolve(reader.result);
             reader.onerror = error => reject(error);
         });
 
-        // บันทึกงาน
-        async function submitTask() {
-            const topic = document.getElementById('tTopic').value;
-            if(!topic) return alert("กรุณาระบุหัวข้อ");
-
-            const btn = document.getElementById('btnSave');
-            btn.innerText = "กำลังอัปโหลด...";
-            btn.disabled = true;
-
-            let fileData = "", fileName = "", mimeType = "";
-            const fileInput = document.getElementById('tFile');
-            
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                if (file.size > 5 * 1024 * 1024) {
-                    alert("ไฟล์ใหญ่เกิน 5MB");
-                    btn.innerText = "บันทึก"; btn.disabled = false;
-                    return;
-                }
-                try {
-                    fileData = await fileToBase64(file);
-                    fileName = file.name;
-                    mimeType = file.type;
-                } catch(e) { alert("อ่านไฟล์ล้มเหลว"); return; }
-            }
-
-            const payload = {
-                action: "save_task",
-                userId: currentUserId,
-                type: document.getElementById('tType').value,
-                topic: topic,
-                detail: document.getElementById('tDetail').value,
-                timeStart: document.getElementById('tStart').value,
-                timeEnd: document.getElementById('tEnd').value,
-                note: document.getElementById('tNote').value,
-                fileData: fileData, fileName: fileName, mimeType: mimeType
-            };
-
-            fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) })
-            .then(res => res.json())
-            .then(data => {
-                alert("บันทึกสำเร็จ!");
-                resetForm();
-                resetToMenu();
-            })
-            .catch(err => alert("Error: " + err))
-            .finally(() => {
-                btn.innerText = "บันทึก"; btn.disabled = false;
-            });
-        }
-
-        // ดูรายการงาน
-        function loadMyTasks() {
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('loading').classList.remove('hidden');
-
-            fetch(GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: "get_my_tasks", userId: currentUserId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('task-list-view').classList.remove('hidden');
-                const container = document.getElementById('task-container');
-                container.innerHTML = "";
-                
-                if(data.tasks.length === 0) {
-                    container.innerHTML = "<div class='text-center text-gray-400 mt-10'>ไม่มีประวัติงาน</div>";
-                    return;
-                }
-
-                data.tasks.forEach(t => {
-                    let d = t.start ? new Date(t.start).toLocaleDateString('th-TH') : "-";
-                    let statusClass = t.status === 'Pending' ? 'text-yellow-600 bg-yellow-100' : 'text-green-600 bg-green-100';
-                    let fileBtn = (t.file && t.file.includes('http')) 
-                        ? `<a href="${t.file}" target="_blank" class="text-blue-500 text-xs underline mt-1 block">📎 ดูไฟล์แนบ</a>` 
-                        : "";
-
-                    container.innerHTML += `
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative">
-                            <span class="absolute top-3 right-3 text-[10px] px-2 py-1 rounded bg-gray-100 text-gray-600 font-bold">${t.type}</span>
-                            <div class="font-bold text-gray-800 text-lg pr-12">${t.topic}</div>
-                            <div class="text-xs text-gray-500 mt-1">📅 ${d} • ID: ${t.id}</div>
-                            ${fileBtn}
-                            <div class="mt-2 flex justify-between items-center">
-                                <span class="text-xs font-bold px-2 py-1 rounded ${statusClass}">${t.status}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-        }
-
-        // Helpers UI
-        function toggleLoading(show) {
-            if(show) document.getElementById('loading').classList.remove('hidden');
-            else document.getElementById('loading').classList.add('hidden');
-        }
-        function showTaskForm() {
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('task-form').classList.remove('hidden');
-        }
-        function resetToMenu() {
-            document.getElementById('task-form').classList.add('hidden');
-            document.getElementById('task-list-view').classList.add('hidden');
-            document.getElementById('main-menu').classList.remove('hidden');
-        }
-        function resetForm() {
-            document.getElementById('tTopic').value = "";
-            document.getElementById('tDetail').value = "";
-            document.getElementById('tNote').value = "";
-            document.getElementById('tFile').value = "";
-        }
-
-        main();
+        // Start
+        init();
     </script>
 </body>
 </html>
