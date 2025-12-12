@@ -9,11 +9,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
-        /* ซ่อน Scrollbar */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         .hidden { display: none !important; }
-        /* ตัดคำยาวเกิน 1 บรรทัด */
         .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        /* ปรับแต่ง Input วันที่ให้ดูง่ายขึ้น */
+        input[type="datetime-local"] {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #fff;
+        }
     </style>
 </head>
 <body class="p-2 pb-10 max-w-md mx-auto bg-gray-50 min-h-screen">
@@ -73,7 +78,7 @@
             <form id="taskForm" class="space-y-3">
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 mb-1">ประเภทงาน</label>
-                    <select id="tType" class="w-full border p-2 rounded bg-gray-50 text-xs outline-none">
+                    <select id="tType" class="w-full border p-2 rounded bg-gray-50 text-xs outline-none focus:border-blue-500">
                         <option value="โครงการ">โครงการ</option>
                         <option value="ทั่วไป">ทั่วไป</option>
                         <option value="ประชุม">ประชุม</option>
@@ -86,20 +91,20 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 mb-1">หัวข้อ</label>
-                    <input type="text" id="tTopic" class="w-full border p-2 rounded text-xs outline-none" required>
+                    <input type="text" id="tTopic" class="w-full border p-2 rounded text-xs outline-none focus:border-blue-500" required>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 mb-1">รายละเอียด</label>
-                    <textarea id="tDetail" rows="2" class="w-full border p-2 rounded text-xs outline-none"></textarea>
+                    <textarea id="tDetail" rows="2" class="w-full border p-2 rounded text-xs outline-none focus:border-blue-500"></textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 mb-1">เริ่ม</label>
-                        <input type="datetime-local" id="tStart" class="w-full border p-1 rounded text-[10px]">
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">เริ่ม (วัน/เวลา)</label>
+                        <input type="datetime-local" id="tStart" class="w-full border border-gray-300 p-2 rounded text-[11px] bg-blue-50 text-blue-800 focus:ring-2 focus:ring-blue-200 outline-none cursor-pointer">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 mb-1">สิ้นสุด</label>
-                        <input type="datetime-local" id="tEnd" class="w-full border p-1 rounded text-[10px]">
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">สิ้นสุด (วัน/เวลา)</label>
+                        <input type="datetime-local" id="tEnd" class="w-full border border-gray-300 p-2 rounded text-[11px] bg-gray-50 text-gray-600 focus:ring-2 focus:ring-gray-200 outline-none cursor-pointer">
                     </div>
                 </div>
                 <div>
@@ -107,7 +112,7 @@
                     <input type="file" id="tFile" class="block w-full text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 </div>
                 <div class="pt-2">
-                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold shadow text-sm">บันทึก</button>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold shadow text-sm active:scale-95 transition">บันทึก</button>
                 </div>
             </form>
         </div>
@@ -139,7 +144,7 @@
         // ==========================================
         
         const LIFF_ID = "2008677450-DMy5BGWi"; // ใส่ LIFF ID (เช่น 1234567890-AbCdEfGh)
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzRdoj5OhD4XzY7to3dPnFkIrPPOEYxCyX4vdgfycCGGPYalhPQ-qG9-eMJpO4H5Zdj/exec"; // ใส่ URL Web App
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzRdoj5OhD4XzY7to3dPnFkIrPPOEYxCyX4vdgfycCGGPYalhPQ-qG9-eMJpO4H5Zdj/exec"; // ใส่ Web App URL
         
         // ==========================================
 
@@ -162,6 +167,25 @@
                 alert("❌ Init Error: " + e.message);
             }
         }
+
+        // --- 🌟 ระบบ Auto-Fill เวลา (New!) ---
+        // เมื่อเลือกเวลาเริ่ม -> เวลาจบจะถูกตั้งค่าให้เท่ากันทันที
+        document.getElementById('tStart').addEventListener('change', function() {
+            const startVal = this.value;
+            const endInput = document.getElementById('tEnd');
+            
+            // ถ้าเวลาจบยังว่าง หรือ เวลาจบ น้อยกว่าเวลาเริ่ม -> อัปเดตให้เท่ากัน
+            if (!endInput.value || endInput.value < startVal) {
+                endInput.value = startVal;
+                
+                // เอฟเฟกต์กระพริบเบาๆ ให้รู้ว่าเปลี่ยนแล้ว
+                endInput.classList.add('bg-blue-50');
+                setTimeout(() => {
+                    endInput.classList.remove('bg-blue-50');
+                    endInput.classList.add('bg-gray-50');
+                }, 500);
+            }
+        });
 
         // --- Check User ---
         async function checkUser() {
@@ -197,18 +221,15 @@
             document.getElementById('uRole').innerText = user.role.toUpperCase();
         }
 
-        // --- Create Card (Compact + Fixed Vowels + Date) ---
+        // --- Create Card ---
         function createCard(t, mode) {
             const now = new Date();
             const startDate = new Date(t.start);
             const endDate = t.end ? new Date(t.end) : null;
 
-            // ✅ แก้ไข 1: แสดงวันในสัปดาห์ (วันจันทร์ที่ 12 ธ.ค. 68)
+            // วันที่
             const dateStr = startDate.toLocaleDateString('th-TH', { 
-                weekday: 'long', // แสดงวันจันทร์, อังคาร...
-                day: 'numeric', 
-                month: 'short', 
-                year: '2-digit' 
+                weekday: 'long', day: 'numeric', month: 'short', year: '2-digit' 
             });
 
             const startTimeStr = startDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
@@ -271,7 +292,6 @@
                 </div>`;
             }
 
-            // ✅ แก้ไข 2: เพิ่ม leading-normal และ py-0.5 เพื่อแก้ปัญหาสระลอยหาย
             return `
                 <div class="bg-white p-2.5 rounded-lg shadow-sm border-l-[3px] ${mode === 'active' ? 'border-green-500' : 'border-gray-400'} mb-2 relative">
                     <div class="flex justify-between items-start">
