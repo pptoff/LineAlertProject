@@ -9,10 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
-        /* ซ่อน Scrollbar แต่ยังเลื่อนได้ */
+        /* ซ่อน Scrollbar */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         .hidden { display: none !important; }
-        /* ตัดคำหากยาวเกิน 1 บรรทัด */
+        /* ตัดคำยาวเกิน 1 บรรทัด */
         .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
     </style>
 </head>
@@ -29,7 +29,7 @@
             <div>
                 <h2 class="text-[10px] text-gray-400">ยินดีต้อนรับ</h2>
                 <div class="flex items-end gap-2">
-                    <span id="uName" class="text-sm font-bold text-green-700 leading-none">...</span>
+                    <span id="uName" class="text-sm font-bold text-green-700 leading-none py-0.5">...</span>
                     <span id="uPos" class="text-[10px] text-green-600 opacity-80 leading-none">...</span>
                 </div>
                 <div class="text-[10px] text-blue-600 mt-1 font-semibold">
@@ -45,9 +45,7 @@
             <button onclick="openPage('form-section')" class="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-3 rounded-lg shadow hover:shadow-md transition flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <span class="text-xl">📝</span>
-                    <div class="text-left">
-                        <div class="font-bold text-sm">บันทึกงานใหม่</div>
-                    </div>
+                    <div class="text-left"><div class="font-bold text-sm">บันทึกงานใหม่</div></div>
                 </div>
                 <span class="text-lg opacity-50">›</span>
             </button>
@@ -55,9 +53,7 @@
             <button onclick="loadMyTasks('active')" class="bg-gradient-to-r from-green-600 to-green-500 text-white p-3 rounded-lg shadow hover:shadow-md transition flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <span class="text-xl">📅</span>
-                    <div class="text-left">
-                        <div class="font-bold text-sm">งานของฉัน</div>
-                    </div>
+                    <div class="text-left"><div class="font-bold text-sm">งานของฉัน</div></div>
                 </div>
                 <span class="text-lg opacity-50">›</span>
             </button>
@@ -65,9 +61,7 @@
             <button onclick="loadMyTasks('ended')" class="bg-gradient-to-r from-gray-600 to-gray-500 text-white p-3 rounded-lg shadow hover:shadow-md transition flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <span class="text-xl">🗂</span>
-                    <div class="text-left">
-                        <div class="font-bold text-sm">ประวัติงาน</div>
-                    </div>
+                    <div class="text-left"><div class="font-bold text-sm">ประวัติงาน</div></div>
                 </div>
                 <span class="text-lg opacity-50">›</span>
             </button>
@@ -141,66 +135,54 @@
 
     <script>
         // ==========================================
-        // 🔴 ส่วนตั้งค่า (แก้ไขตรงนี้ให้ถูกต้อง) 🔴
+        // 🔴 ตั้งค่า Config 🔴
         // ==========================================
         
-        const LIFF_ID = "2008677450-DMy5BGWi"; // ใส่ LIFF ID (ห้ามมี https://)
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzRdoj5OhD4XzY7to3dPnFkIrPPOEYxCyX4vdgfycCGGPYalhPQ-qG9-eMJpO4H5Zdj/exec"; // ใส่ Web App URL
+        const LIFF_ID = "YOUR_LIFF_ID"; // ใส่ LIFF ID (เช่น 1234567890-AbCdEfGh)
+        const GAS_URL = "YOUR_GAS_URL"; // ใส่ URL Web App
         
         // ==========================================
 
         let userProfile = null;
 
-        // --- 1. เริ่มต้นระบบ (Auto Init) ---
+        // --- Init ---
         async function main() {
-            // ป้องกัน User Error: ใส่ ID ผิด
             if(LIFF_ID.startsWith("http") || LIFF_ID.includes("YOUR")) {
-                alert("❌ ตั้งค่าผิดพลาด: LIFF_ID ต้องเป็นรหัสตัวเลข-ตัวอักษร ห้ามมี https://");
+                alert("❌ ตั้งค่าผิดพลาด: LIFF_ID ต้องเป็นรหัส ห้ามมี https://");
                 return;
             }
-
             try {
                 toggleLoading(true, "เชื่อมต่อ LINE...");
                 await liff.init({ liffId: LIFF_ID });
-                
-                if (!liff.isLoggedIn()) { 
-                    liff.login(); 
-                    return; 
-                }
-                
+                if (!liff.isLoggedIn()) { liff.login(); return; }
                 userProfile = await liff.getProfile();
-                checkUser(); // ไปตรวจสอบสิทธิ์
+                checkUser();
             } catch (e) {
                 toggleLoading(false);
-                alert("❌ เกิดข้อผิดพลาด: " + e.message + "\n(กรุณาตรวจสอบ LIFF ID)");
+                alert("❌ Init Error: " + e.message);
             }
         }
 
-        // --- 2. ตรวจสอบสิทธิ์ ---
+        // --- Check User ---
         async function checkUser() {
             toggleLoading(true, "ตรวจสอบสิทธิ์...");
             const res = await api('check_role', { userId: userProfile.userId });
             toggleLoading(false);
             
             document.getElementById('app').classList.remove('hidden');
-            
             if (res.found) {
                 if(res.user.role === 'guest') {
-                    // รออนุมัติ
                     document.getElementById('register-section').classList.remove('hidden');
                     document.getElementById('register-section').innerHTML = `
                         <div class="text-center py-5">
                             <div class="text-4xl mb-2">⏳</div>
                             <h2 class="text-base font-bold text-gray-700">รอการอนุมัติ</h2>
-                            <p class="text-xs text-gray-500 mt-1">ข้อมูลเข้าระบบแล้ว รอแอดมินตรวจสอบ</p>
                         </div>`;
                 } else {
-                    // ผ่าน
                     renderProfile(res.user);
                     goHome();
                 }
             } else {
-                // ยังไม่ลงทะเบียน
                 document.getElementById('register-section').classList.remove('hidden');
                 document.getElementById('menu-section').classList.add('hidden');
                 document.getElementById('profile-section').classList.add('hidden');
@@ -215,21 +197,25 @@
             document.getElementById('uRole').innerText = user.role.toUpperCase();
         }
 
-        // --- 3. สร้างการ์ดงาน (COMPACT MODE) ---
+        // --- Create Card (Compact + Fixed Vowels + Date) ---
         function createCard(t, mode) {
             const now = new Date();
             const startDate = new Date(t.start);
             const endDate = t.end ? new Date(t.end) : null;
 
-            // วันที่แบบย่อ
-            const dateStr = startDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
+            // ✅ แก้ไข 1: แสดงวันในสัปดาห์ (วันจันทร์ที่ 12 ธ.ค. 68)
+            const dateStr = startDate.toLocaleDateString('th-TH', { 
+                weekday: 'long', // แสดงวันจันทร์, อังคาร...
+                day: 'numeric', 
+                month: 'short', 
+                year: '2-digit' 
+            });
 
-            // เวลา 10:30-12:00
             const startTimeStr = startDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
             const endTimeStr = endDate ? endDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : "-";
             const timeRangeStr = `${startTimeStr}-${endTimeStr}`;
 
-            // Logic นับถอยหลัง
+            // Countdown Logic
             let countdownHTML = "";
             let statusText = "Pending";
             let statusClass = "text-yellow-600 bg-yellow-100";
@@ -250,10 +236,8 @@
                     const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
-                    // สีแดงเมื่อเหลือน้อยกว่า 3 วัน หรือ 3 ชั่วโมง
                     let isUrgent = (!isCountingToEnd && days < 3) || (isCountingToEnd && days === 0 && hours < 3);
                     const badgeColor = isUrgent ? "text-red-600 bg-red-50 border-red-100" : "text-green-600 bg-green-50 border-green-100";
-                    
                     let timeText = days > 0 ? `${days}ว. ` : "";
                     timeText += `${hours}ชม. ${minutes}น.`;
                     
@@ -266,7 +250,7 @@
                 statusClass = "text-gray-500 bg-gray-100";
             }
 
-            // ปุ่มแบบ Compact (1/4 และ 3/4)
+            // Buttons
             let buttonSection = "";
             const fileBtnClass = "flex-1 border border-blue-200 text-blue-600 hover:bg-blue-50 text-[10px] py-1 rounded flex justify-center items-center gap-1 transition h-7";
             const fileBtn = (t.file && t.file.includes('http')) 
@@ -287,11 +271,11 @@
                 </div>`;
             }
 
-            // Template การ์ด
+            // ✅ แก้ไข 2: เพิ่ม leading-normal และ py-0.5 เพื่อแก้ปัญหาสระลอยหาย
             return `
                 <div class="bg-white p-2.5 rounded-lg shadow-sm border-l-[3px] ${mode === 'active' ? 'border-green-500' : 'border-gray-400'} mb-2 relative">
                     <div class="flex justify-between items-start">
-                        <div class="font-bold text-sm text-gray-800 leading-tight pr-2 line-clamp-1">${t.topic}</div>
+                        <div class="font-bold text-sm text-gray-800 leading-normal py-0.5 pr-2 line-clamp-1">${t.topic}</div>
                         <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${statusClass} whitespace-nowrap">${statusText}</span>
                     </div>
                     <div class="flex items-center gap-2 mt-1 text-[10px] text-gray-500">
@@ -305,12 +289,10 @@
             `;
         }
 
-        // --- 4. การทำงานต่างๆ (Actions) ---
-        
-        // ลงทะเบียน
+        // --- Actions ---
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            toggleLoading(true, "บันทึกข้อมูล...");
+            toggleLoading(true, "บันทึก...");
             const payload = {
                 userId: userProfile.userId,
                 name: document.getElementById('rName').value,
@@ -323,24 +305,17 @@
             location.reload();
         });
 
-        // บันทึกงาน
         document.getElementById('taskForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            toggleLoading(true, "กำลังบันทึก...");
-
+            toggleLoading(true, "บันทึก...");
             let fileData = "", fileName = "", mimeType = "";
             const fileInput = document.getElementById('tFile');
             if (fileInput.files.length > 0) {
                 const f = fileInput.files[0];
-                if(f.size > 5 * 1024 * 1024) { 
-                    alert("❌ ไฟล์ใหญ่เกิน 5MB"); 
-                    toggleLoading(false); 
-                    return; 
-                }
+                if(f.size > 5 * 1024 * 1024) { alert("ไฟล์ใหญ่เกิน 5MB"); toggleLoading(false); return; }
                 fileData = await toBase64(f);
                 fileName = f.name; mimeType = f.type;
             }
-
             const payload = {
                 userId: userProfile.userId,
                 type: document.getElementById('tType').value,
@@ -350,11 +325,10 @@
                 timeEnd: document.getElementById('tEnd').value,
                 fileData, fileName, mimeType
             };
-
             const res = await api('save_task', payload);
             toggleLoading(false);
             if(res.status === 'success') {
-                alert("✅ บันทึกเรียบร้อย!");
+                alert("✅ เรียบร้อย");
                 e.target.reset();
                 goHome();
             } else {
@@ -362,22 +336,17 @@
             }
         });
 
-        // โหลดงาน
         async function loadMyTasks(mode) {
             openPage('list-section');
             document.getElementById('list-title').innerText = (mode === 'active') ? "งานของฉัน" : "ประวัติงาน";
-            
             toggleLoading(true, "ดึงข้อมูล...");
             const res = await api('get_my_tasks', { userId: userProfile.userId });
             toggleLoading(false);
-
             const container = document.getElementById('task-container');
             container.innerHTML = "";
-
             let tasks = res.tasks || [];
             tasks = tasks.filter(t => (mode === 'active' ? t.status !== 'Ended' : t.status === 'Ended'));
             tasks.sort((a, b) => new Date(a.start) - new Date(b.start));
-
             if (tasks.length === 0) {
                 container.innerHTML = `<div class='text-center text-xs text-gray-400 mt-10'>- ไม่มีรายการ -</div>`;
                 return;
@@ -385,22 +354,20 @@
             tasks.forEach(t => container.innerHTML += createCard(t, mode));
         }
 
-        // จบงาน
         async function endTask(taskId) {
             if(!confirm("ยืนยันจบงาน?")) return;
-            toggleLoading(true, "กำลังอัปเดต...");
+            toggleLoading(true);
             await api('end_task', { taskId });
             toggleLoading(false);
             loadMyTasks('active');
         }
 
-        // --- Helper Functions ---
         async function api(action, data) {
             try {
                 const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action, ...data }) });
                 return await res.json();
             } catch (err) {
-                alert("Connection Error: " + err);
+                alert("Connect Error: " + err);
                 return { status: 'error' };
             }
         }
@@ -417,13 +384,8 @@
                 if(el) el.classList.add('hidden');
             });
             document.getElementById(pageId).classList.remove('hidden');
-            
-            // Show/Hide Profile
-            if(pageId === 'menu-section') {
-                document.getElementById('profile-section').classList.remove('hidden');
-            } else {
-                document.getElementById('profile-section').classList.add('hidden');
-            }
+            if(pageId === 'menu-section') document.getElementById('profile-section').classList.remove('hidden');
+            else document.getElementById('profile-section').classList.add('hidden');
         }
         function goHome() { openPage('menu-section'); }
         const toBase64 = file => new Promise((res, rej) => {
@@ -433,9 +395,7 @@
             r.onerror = rej;
         });
 
-        // เริ่มทำงาน
         main();
-
     </script>
 </body>
 </html>
