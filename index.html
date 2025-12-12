@@ -12,13 +12,7 @@
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         .hidden { display: none !important; }
         .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-        
-        /* ปรับแต่ง Input วันที่ให้ดูง่ายขึ้น */
-        input[type="datetime-local"] {
-            appearance: none;
-            -webkit-appearance: none;
-            background-color: #fff;
-        }
+        input[type="datetime-local"] { appearance: none; -webkit-appearance: none; background-color: #fff; }
     </style>
 </head>
 <body class="p-2 pb-10 max-w-md mx-auto bg-gray-50 min-h-screen">
@@ -30,7 +24,7 @@
 
     <div id="app" class="hidden">
         
-        <div id="profile-section" class="bg-white p-3 rounded-xl shadow-sm mb-3 border-l-4 border-green-500 flex justify-between items-center">
+        <div id="profile-section" class="bg-white p-3 rounded-xl shadow-sm mb-3 border-l-4 border-green-500 flex justify-between items-center relative">
             <div>
                 <h2 class="text-[10px] text-gray-400">ยินดีต้อนรับ</h2>
                 <div class="flex items-end gap-2">
@@ -41,8 +35,9 @@
                     <span id="uDept">...</span> / <span id="uOrg">...</span>
                 </div>
             </div>
-            <div class="text-right">
+            <div class="text-right flex flex-col items-end gap-1">
                 <span id="uRole" class="bg-green-100 text-green-800 text-[9px] px-2 py-1 rounded-full font-bold uppercase">USER</span>
+                <button onclick="forceRefresh()" class="text-[9px] text-gray-400 underline hover:text-blue-500">↻ อัปเดตข้อมูล</button>
             </div>
         </div>
 
@@ -99,12 +94,12 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 mb-1">เริ่ม (วัน/เวลา)</label>
-                        <input type="datetime-local" id="tStart" class="w-full border border-gray-300 p-2 rounded text-[11px] bg-blue-50 text-blue-800 focus:ring-2 focus:ring-blue-200 outline-none cursor-pointer">
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">เริ่ม</label>
+                        <input type="datetime-local" id="tStart" class="w-full border border-gray-300 p-2 rounded text-[11px] bg-blue-50 text-blue-800 focus:ring-2 focus:ring-blue-200 outline-none">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 mb-1">สิ้นสุด (วัน/เวลา)</label>
-                        <input type="datetime-local" id="tEnd" class="w-full border border-gray-300 p-2 rounded text-[11px] bg-gray-50 text-gray-600 focus:ring-2 focus:ring-gray-200 outline-none cursor-pointer">
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">สิ้นสุด</label>
+                        <input type="datetime-local" id="tEnd" class="w-full border border-gray-300 p-2 rounded text-[11px] bg-gray-50 text-gray-600 focus:ring-2 focus:ring-gray-200 outline-none">
                     </div>
                 </div>
                 <div>
@@ -143,9 +138,10 @@
         // 🔴 ตั้งค่า Config 🔴
         // ==========================================
         
-        const LIFF_ID = "2008677450-DMy5BGWi"; // ใส่ LIFF ID (เช่น 1234567890-AbCdEfGh)
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzRdoj5OhD4XzY7to3dPnFkIrPPOEYxCyX4vdgfycCGGPYalhPQ-qG9-eMJpO4H5Zdj/exec"; // ใส่ Web App URL
-        
+        const LIFF_ID = "2008677450-DMy5BGWi"; 
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzRdoj5OhD4XzY7to3dPnFkIrPPOEYxCyX4vdgfycCGGPYalhPQ-qG9-eMJpO4H5Zdj/exec"; 
+        const CACHE_KEY = "notifyappworkingcahe"; // ชื่อสำหรับเก็บ Cache
+
         // ==========================================
 
         let userProfile = null;
@@ -153,64 +149,98 @@
         // --- Init ---
         async function main() {
             if(LIFF_ID.startsWith("http") || LIFF_ID.includes("YOUR")) {
-                alert("❌ ตั้งค่าผิดพลาด: LIFF_ID ต้องเป็นรหัส ห้ามมี https://");
-                return;
+                alert("❌ ตั้งค่าผิดพลาด: LIFF_ID ต้องเป็นรหัส ห้ามมี https://"); return;
             }
             try {
-                toggleLoading(true, "เชื่อมต่อ LINE...");
+                toggleLoading(true, "กำลังโหลด...");
                 await liff.init({ liffId: LIFF_ID });
                 if (!liff.isLoggedIn()) { liff.login(); return; }
                 userProfile = await liff.getProfile();
-                checkUser();
+                
+                // เริ่มกระบวนการเช็ค User (พร้อม Cache)
+                checkUserWithCache();
             } catch (e) {
                 toggleLoading(false);
-                alert("❌ Init Error: " + e.message);
+                alert("Init Error: " + e.message);
             }
         }
 
-        // --- 🌟 ระบบ Auto-Fill เวลา (New!) ---
-        // เมื่อเลือกเวลาเริ่ม -> เวลาจบจะถูกตั้งค่าให้เท่ากันทันที
-        document.getElementById('tStart').addEventListener('change', function() {
-            const startVal = this.value;
-            const endInput = document.getElementById('tEnd');
+        // --- 🌟 ระบบ Cache Logic ---
+        async function checkUserWithCache() {
+            const today = new Date().toDateString(); // เช่น "Fri Dec 12 2025"
             
-            // ถ้าเวลาจบยังว่าง หรือ เวลาจบ น้อยกว่าเวลาเริ่ม -> อัปเดตให้เท่ากัน
-            if (!endInput.value || endInput.value < startVal) {
-                endInput.value = startVal;
-                
-                // เอฟเฟกต์กระพริบเบาๆ ให้รู้ว่าเปลี่ยนแล้ว
-                endInput.classList.add('bg-blue-50');
-                setTimeout(() => {
-                    endInput.classList.remove('bg-blue-50');
-                    endInput.classList.add('bg-gray-50');
-                }, 500);
+            // 1. ลองดึงจาก Cache ก่อน
+            const cachedRaw = localStorage.getItem(CACHE_KEY);
+            if (cachedRaw) {
+                const cached = JSON.parse(cachedRaw);
+                // เช็คว่า Cache เป็นของ "วันนี้" และ "ไม่ใช่ Guest" ไหม
+                if (cached.date === today && cached.user.role !== 'guest') {
+                    console.log("Using Cache Data"); // Debug
+                    
+                    // ใช้ข้อมูลจาก Cache เลย ไม่ต้องโหลด API
+                    toggleLoading(false);
+                    document.getElementById('app').classList.remove('hidden');
+                    renderProfile(cached.user);
+                    goHome();
+                    return; // จบการทำงาน (เร็วปรื๊ด!)
+                }
             }
-        });
 
-        // --- Check User ---
-        async function checkUser() {
-            toggleLoading(true, "ตรวจสอบสิทธิ์...");
+            // 2. ถ้าไม่มี Cache หรือเก่าแล้ว -> โหลดใหม่จาก Server
+            console.log("Fetching form Server");
+            checkUserFromServer(today);
+        }
+
+        async function checkUserFromServer(todayDateStr) {
+            toggleLoading(true, "อัปเดตข้อมูล...");
             const res = await api('check_role', { userId: userProfile.userId });
             toggleLoading(false);
             
             document.getElementById('app').classList.remove('hidden');
             if (res.found) {
                 if(res.user.role === 'guest') {
-                    document.getElementById('register-section').classList.remove('hidden');
-                    document.getElementById('register-section').innerHTML = `
-                        <div class="text-center py-5">
-                            <div class="text-4xl mb-2">⏳</div>
-                            <h2 class="text-base font-bold text-gray-700">รอการอนุมัติ</h2>
-                        </div>`;
+                    // ถ้าเป็น Guest ไม่ต้องจำ Cache (เพราะต้องรออนุมัติ)
+                    localStorage.removeItem(CACHE_KEY); 
+                    showRegisterWait();
                 } else {
+                    // ถ้าเป็น User/Admin -> บันทึก Cache ไว้ใช้ครั้งหน้า
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({
+                        date: todayDateStr,
+                        user: res.user
+                    }));
+                    
                     renderProfile(res.user);
                     goHome();
                 }
             } else {
-                document.getElementById('register-section').classList.remove('hidden');
-                document.getElementById('menu-section').classList.add('hidden');
-                document.getElementById('profile-section').classList.add('hidden');
+                localStorage.removeItem(CACHE_KEY);
+                showRegisterForm();
             }
+        }
+
+        // ปุ่ม Force Refresh (เผื่อ User อยากอัปเดตเอง)
+        function forceRefresh() {
+            localStorage.removeItem(CACHE_KEY);
+            location.reload();
+        }
+
+        // --- UI Helpers ---
+        function showRegisterWait() {
+            document.getElementById('register-section').classList.remove('hidden');
+            document.getElementById('register-section').innerHTML = `
+                <div class="text-center py-5">
+                    <div class="text-4xl mb-2">⏳</div>
+                    <h2 class="text-base font-bold text-gray-700">รอการอนุมัติ</h2>
+                    <p class="text-xs text-gray-500 mt-1">ข้อมูลเข้าระบบแล้ว <br> <a href="#" onclick="forceRefresh()" class="text-blue-500 underline">กดเพื่อเช็คสถานะอีกครั้ง</a></p>
+                </div>`;
+            document.getElementById('menu-section').classList.add('hidden');
+            document.getElementById('profile-section').classList.add('hidden');
+        }
+
+        function showRegisterForm() {
+            document.getElementById('register-section').classList.remove('hidden');
+            document.getElementById('menu-section').classList.add('hidden');
+            document.getElementById('profile-section').classList.add('hidden');
         }
 
         function renderProfile(user) {
@@ -221,22 +251,32 @@
             document.getElementById('uRole').innerText = user.role.toUpperCase();
         }
 
-        // --- Create Card ---
+        // --- Auto-Fill Time ---
+        document.getElementById('tStart').addEventListener('change', function() {
+            const endInput = document.getElementById('tEnd');
+            if (!endInput.value || endInput.value < this.value) {
+                endInput.value = this.value;
+                endInput.classList.add('bg-blue-50');
+                setTimeout(() => {
+                    endInput.classList.remove('bg-blue-50');
+                    endInput.classList.add('bg-gray-50');
+                }, 500);
+            }
+        });
+
+        // --- Create Card (Compact) ---
         function createCard(t, mode) {
             const now = new Date();
             const startDate = new Date(t.start);
             const endDate = t.end ? new Date(t.end) : null;
 
-            // วันที่
             const dateStr = startDate.toLocaleDateString('th-TH', { 
                 weekday: 'long', day: 'numeric', month: 'short', year: '2-digit' 
             });
-
             const startTimeStr = startDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
             const endTimeStr = endDate ? endDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : "-";
             const timeRangeStr = `${startTimeStr}-${endTimeStr}`;
 
-            // Countdown Logic
             let countdownHTML = "";
             let statusText = "Pending";
             let statusClass = "text-yellow-600 bg-yellow-100";
@@ -271,7 +311,6 @@
                 statusClass = "text-gray-500 bg-gray-100";
             }
 
-            // Buttons
             let buttonSection = "";
             const fileBtnClass = "flex-1 border border-blue-200 text-blue-600 hover:bg-blue-50 text-[10px] py-1 rounded flex justify-center items-center gap-1 transition h-7";
             const fileBtn = (t.file && t.file.includes('http')) 
@@ -309,7 +348,7 @@
             `;
         }
 
-        // --- Actions ---
+        // --- Core Actions ---
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             toggleLoading(true, "บันทึก...");
