@@ -10,11 +10,12 @@
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
         .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body class="p-4 pb-20">
 
-    <div id="loading" class="fixed inset-0 bg-white bg-opacity-90 z-50 flex flex-col justify-center items-center">
+    <div id="loading" class="fixed inset-0 bg-white bg-opacity-90 z-50 flex flex-col justify-center items-center hidden">
         <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div>
         <p class="mt-4 text-gray-600 font-bold">กำลังโหลดข้อมูล...</p>
     </div>
@@ -22,56 +23,61 @@
     <div id="app" class="hidden max-w-md mx-auto">
         
         <div id="profile-section" class="bg-white p-5 rounded-2xl card-shadow mb-6 border-l-4 border-green-500">
-            <h2 class="text-sm text-gray-500 mb-1">ยินดีต้อนรับ</h2>
+            <h2 class="text-xs text-gray-400 mb-1">ยินดีต้อนรับ</h2>
             <div class="text-lg font-bold text-green-700 flex flex-wrap gap-2 items-end">
                 <span id="uName">...</span>
                 <span id="uPos" class="text-sm font-normal opacity-80">...</span>
             </div>
-            <div class="text-sm text-blue-600 mt-1 font-semibold">
+            <div class="text-sm text-blue-600 mt-1 font-semibold border-t border-gray-100 pt-1">
                 <span id="uDept">...</span> / <span id="uOrg">...</span>
             </div>
             <div class="mt-2">
-                <span id="uRole" class="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wide">USER</span>
+                <span id="uRole" class="bg-green-100 text-green-800 text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wide">USER</span>
             </div>
         </div>
 
         <div id="menu-section" class="grid grid-cols-1 gap-3">
-            <button onclick="openTaskForm()" class="bg-blue-600 text-white p-4 rounded-xl shadow-lg hover:bg-blue-700 transition flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">📝</span>
+            <button onclick="openPage('form-section')" class="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <span class="text-2xl group-hover:scale-110 transition">📝</span>
                     <div class="text-left">
-                        <div class="font-bold">บันทึกงานใหม่</div>
-                        <div class="text-xs opacity-75">สร้างรายการงาน</div>
+                        <div class="font-bold text-lg">บันทึกงานใหม่</div>
+                        <div class="text-xs opacity-80">สร้างรายการงาน</div>
                     </div>
                 </div>
+                <span class="text-2xl opacity-50">›</span>
             </button>
-            <button onclick="loadMyTasks('active')" class="bg-green-600 text-white p-4 rounded-xl shadow-lg hover:bg-green-700 transition flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">📅</span>
+
+            <button onclick="loadMyTasks('active')" class="bg-gradient-to-r from-green-600 to-green-500 text-white p-4 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <span class="text-2xl group-hover:scale-110 transition">📅</span>
                     <div class="text-left">
-                        <div class="font-bold">งานของฉัน</div>
-                        <div class="text-xs opacity-75">งานที่กำลังดำเนินการ</div>
+                        <div class="font-bold text-lg">งานของฉัน</div>
+                        <div class="text-xs opacity-80">งานที่กำลังดำเนินการ</div>
                     </div>
                 </div>
+                <span class="text-2xl opacity-50">›</span>
             </button>
-            <button onclick="loadMyTasks('ended')" class="bg-gray-600 text-white p-4 rounded-xl shadow-lg hover:bg-gray-700 transition flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">chk</span>
+
+            <button onclick="loadMyTasks('ended')" class="bg-gradient-to-r from-gray-600 to-gray-500 text-white p-4 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <span class="text-2xl group-hover:scale-110 transition">🗂</span>
                     <div class="text-left">
-                        <div class="font-bold">ประวัติงาน</div>
-                        <div class="text-xs opacity-75">งานที่เสร็จสิ้นแล้ว</div>
+                        <div class="font-bold text-lg">ประวัติงาน</div>
+                        <div class="text-xs opacity-80">งานที่เสร็จสิ้นแล้ว</div>
                     </div>
                 </div>
+                <span class="text-2xl opacity-50">›</span>
             </button>
         </div>
 
-        <div id="form-section" class="hidden bg-white p-6 rounded-2xl card-shadow mt-4 relative">
-            <button onclick="goHome()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">✕</button>
+        <div id="form-section" class="hidden bg-white p-6 rounded-2xl card-shadow mt-4 relative animate-fade-in-up">
+            <button onclick="goHome()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
             <h3 class="font-bold text-xl mb-4 text-gray-800 border-b pb-2">บันทึกงานใหม่</h3>
             <form id="taskForm" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">ประเภทงาน</label>
-                    <select id="tType" class="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <select id="tType" class="w-full border border-gray-300 p-2.5 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                         <option value="โครงการ">โครงการ</option>
                         <option value="ทั่วไป">ทั่วไป</option>
                         <option value="ประชุม">ประชุม</option>
@@ -84,88 +90,111 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">หัวข้อ</label>
-                    <input type="text" id="tTopic" class="w-full border border-gray-300 p-2 rounded-lg" required>
+                    <input type="text" id="tTopic" class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">รายละเอียด</label>
-                    <textarea id="tDetail" rows="3" class="w-full border border-gray-300 p-2 rounded-lg"></textarea>
+                    <textarea id="tDetail" rows="3" class="w-full border border-gray-300 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 mb-1">เริ่ม</label>
-                        <input type="datetime-local" id="tStart" class="w-full border border-gray-300 p-2 rounded-lg text-sm">
+                        <input type="datetime-local" id="tStart" class="w-full border border-gray-300 p-2 rounded-lg text-sm bg-gray-50">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 mb-1">สิ้นสุด</label>
-                        <input type="datetime-local" id="tEnd" class="w-full border border-gray-300 p-2 rounded-lg text-sm">
+                        <input type="datetime-local" id="tEnd" class="w-full border border-gray-300 p-2 rounded-lg text-sm bg-gray-50">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">ไฟล์แนบ</label>
-                    <input type="file" id="tFile" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <div class="border border-dashed border-blue-300 bg-blue-50 rounded-lg p-4 text-center">
+                        <input type="file" id="tFile" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer">
+                        <p class="text-[10px] text-blue-400 mt-2">รองรับไฟล์รูปภาพ, PDF (สูงสุด 5MB)</p>
+                    </div>
                 </div>
                 <div class="pt-2">
-                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-md hover:bg-blue-700">บันทึกข้อมูล</button>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-md hover:bg-blue-700 transition transform active:scale-95">บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
 
         <div id="list-section" class="hidden mt-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="list-title" class="font-bold text-lg text-gray-800">รายการงาน</h3>
-                <button onclick="goHome()" class="text-sm bg-gray-200 px-3 py-1 rounded-full">กลับ</button>
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h3 id="list-title" class="font-bold text-xl text-gray-800">รายการงาน</h3>
+                <button onclick="goHome()" class="text-xs bg-gray-200 text-gray-600 px-3 py-1.5 rounded-full hover:bg-gray-300 transition">❮ กลับหน้าหลัก</button>
             </div>
-            <div id="task-container" class="space-y-4"></div>
+            <div id="task-container" class="space-y-4 pb-10"></div>
         </div>
         
-        <div id="register-section" class="hidden bg-white p-6 rounded-2xl shadow-xl mt-10">
-            <h2 class="text-xl font-bold text-center mb-4">ลงทะเบียนครั้งแรก</h2>
+        <div id="register-section" class="hidden bg-white p-6 rounded-2xl shadow-xl mt-10 max-w-sm mx-auto">
+            <h2 class="text-xl font-bold text-center mb-2 text-blue-600">ลงทะเบียนสมาชิก</h2>
+            <p class="text-center text-xs text-gray-500 mb-4">กรุณากรอกข้อมูลให้ครบถ้วนเพื่อรอการอนุมัติ</p>
             <form id="regForm" class="space-y-3">
-                <input type="text" id="rName" placeholder="ชื่อ-นามสกุล" class="w-full border p-2 rounded" required>
-                <input type="text" id="rPos" placeholder="ตำแหน่ง" class="w-full border p-2 rounded" required>
-                <input type="text" id="rDept" placeholder="ฝ่าย" class="w-full border p-2 rounded" required>
-                <input type="text" id="rOrg" placeholder="สังกัด" class="w-full border p-2 rounded" required>
-                <input type="email" id="rEmail" placeholder="อีเมล" class="w-full border p-2 rounded">
-                <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded font-bold">ยืนยัน</button>
+                <input type="text" id="rName" placeholder="ชื่อ-นามสกุล" class="w-full border p-2.5 rounded-lg text-sm" required>
+                <input type="text" id="rPos" placeholder="ตำแหน่ง" class="w-full border p-2.5 rounded-lg text-sm" required>
+                <input type="text" id="rDept" placeholder="ฝ่าย/กลุ่มงาน" class="w-full border p-2.5 rounded-lg text-sm" required>
+                <input type="text" id="rOrg" placeholder="สังกัด/กอง" class="w-full border p-2.5 rounded-lg text-sm" required>
+                <input type="email" id="rEmail" placeholder="อีเมล" class="w-full border p-2.5 rounded-lg text-sm" required>
+                <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold shadow hover:bg-blue-700 mt-2">ยืนยันการลงทะเบียน</button>
             </form>
         </div>
         
     </div>
 
     <script>
-        // --- CONFIG ---
-        const LIFF_ID = "2008677450-DMy5BGWi";
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzRdoj5OhD4XzY7to3dPnFkIrPPOEYxCyX4vdgfycCGGPYalhPQ-qG9-eMJpO4H5Zdj/exec";
+        // --- CONFIGURATION ---
+        const LIFF_ID = "2008677450-DMy5BGWi";  // <-- ใส่ LIFF ID ที่ถูกต้อง (1234xxxx-xxxx)
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzRdoj5OhD4XzY7to3dPnFkIrPPOEYxCyX4vdgfycCGGPYalhPQ-qG9-eMJpO4H5Zdj/exec";  // <-- ใส่ URL Web App (https://script.google.com/...)
 
         let userProfile = null;
 
-        // --- INIT ---
+        // --- INITIALIZATION ---
         async function main() {
             try {
+                toggleLoading(true);
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) { liff.login(); return; }
+                if (!liff.isLoggedIn()) { 
+                    liff.login(); 
+                    return; 
+                }
                 userProfile = await liff.getProfile();
                 checkUser();
-            } catch (e) { alert("Init Error: " + e); }
+            } catch (e) { 
+                alert("Init Error: " + e.message); 
+                toggleLoading(false);
+            }
         }
 
+        // --- CHECK USER & RENDER ---
         async function checkUser() {
-            toggleLoading(true);
             const res = await api('check_role', { userId: userProfile.userId });
             toggleLoading(false);
             
             document.getElementById('app').classList.remove('hidden');
+            
             if (res.found) {
+                // มีข้อมูลแล้ว
                 if(res.user.role === 'guest') {
+                    // แต่ยังไม่อนุมัติ
                     document.getElementById('register-section').classList.remove('hidden');
-                    document.getElementById('register-section').innerHTML = "<center>รออนุมัติสิทธิ์</center>";
+                    document.getElementById('register-section').innerHTML = `
+                        <div class="text-center py-10">
+                            <div class="text-6xl mb-4">⏳</div>
+                            <h2 class="text-xl font-bold text-gray-700">รอการอนุมัติสิทธิ์</h2>
+                            <p class="text-sm text-gray-500 mt-2">ข้อมูลของคุณถูกบันทึกแล้ว<br>กรุณารอแอดมินอนุมัติ</p>
+                        </div>`;
                 } else {
+                    // อนุมัติแล้ว -> โชว์หน้าหลัก
                     renderProfile(res.user);
+                    document.getElementById('profile-section').classList.remove('hidden');
+                    document.getElementById('menu-section').classList.remove('hidden');
                 }
             } else {
+                // ยังไม่เคยลงทะเบียน
                 document.getElementById('register-section').classList.remove('hidden');
-                document.getElementById('menu-section').classList.add('hidden');
                 document.getElementById('profile-section').classList.add('hidden');
+                document.getElementById('menu-section').classList.add('hidden');
             }
         }
 
@@ -174,20 +203,154 @@
             document.getElementById('uPos').innerText = user.position || '-';
             document.getElementById('uDept').innerText = user.department || '-';
             document.getElementById('uOrg').innerText = user.organization || '-';
-            document.getElementById('uRole').innerText = user.role;
+            document.getElementById('uRole').innerText = user.role.toUpperCase();
         }
 
-        // --- CORE FUNCTIONS ---
+        // --- CARD GENERATOR (CORE LOGIC) ---
+        function createCard(t, mode) {
+            const now = new Date();
+            const startDate = new Date(t.start);
+            const endDate = t.end ? new Date(t.end) : null;
 
-        // 1. บันทึกงาน
+            // 1. วันที่
+            const dateStr = startDate.toLocaleDateString('th-TH', { 
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+            });
+
+            // 2. เวลา (ตัวใหญ่)
+            const startTimeStr = startDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            const endTimeStr = endDate ? endDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : "ไม่ได้กำหนด";
+            const timeRangeStr = `${startTimeStr} - ${endTimeStr}`;
+
+            // 3. Countdown Logic
+            let countdownHTML = "";
+            let statusText = "Pending";
+            let statusClass = "text-yellow-600 bg-yellow-100";
+            
+            let targetDate = startDate;
+            let isCountingToEnd = false;
+
+            if (mode === 'active') {
+                if (now >= startDate) {
+                    statusText = "Active";
+                    statusClass = "text-blue-600 bg-blue-100";
+                    if (endDate) {
+                        targetDate = endDate;
+                        isCountingToEnd = true;
+                    } else {
+                        targetDate = null;
+                    }
+                }
+
+                if (targetDate && targetDate > now) {
+                    const diffMs = targetDate - now;
+                    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+                    let timeText = "";
+                    if (days > 0) timeText += `${days}วัน `;
+                    if (hours > 0) timeText += `${hours}ชม. `;
+                    timeText += `${minutes}น.`;
+
+                    // Logic สีแดง
+                    let isUrgent = false;
+                    if (!isCountingToEnd && days < 3) isUrgent = true; 
+                    if (isCountingToEnd && days === 0 && hours < 3) isUrgent = true;
+
+                    const badgeColor = isUrgent ? "text-red-600 bg-red-50 border border-red-200" : "text-green-600 bg-green-50 border border-green-200";
+                    const label = isCountingToEnd ? "เหลือเวลา" : "เริ่มในอีก";
+                    
+                    countdownHTML = `<span class="ml-2 text-[10px] ${badgeColor} px-2 py-0.5 rounded shadow-sm">| ${label} ${timeText} |</span>`;
+                } else if (isCountingToEnd && now >= targetDate) {
+                     countdownHTML = `<span class="ml-2 text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">| เลยกำหนด |</span>`;
+                }
+            } else {
+                statusText = "Ended";
+                statusClass = "text-gray-600 bg-gray-200";
+            }
+
+            // 4. Buttons Layout
+            let buttonSection = "";
+            const fileBtn = (t.file && t.file.includes('http')) 
+                ? `<a href="${t.file}" target="_blank" class="flex-1 w-3/4 bg-blue-50 text-blue-600 border border-blue-200 py-2.5 rounded-xl text-xs font-bold hover:bg-blue-100 flex items-center justify-center gap-1 shadow-sm transition">
+                     📎 ดูไฟล์แนบ
+                   </a>` 
+                : `<div class="flex-1 w-3/4 bg-gray-50 text-gray-400 border border-gray-100 py-2.5 rounded-xl text-xs flex items-center justify-center">
+                     - ไม่มีไฟล์ -
+                   </div>`;
+
+            if (mode === 'active') {
+                buttonSection = `
+                <div class="flex gap-2 mt-4 items-stretch">
+                    <button onclick="endTask('${t.id}')" class="w-1/4 bg-red-50 text-red-600 border border-red-200 py-2.5 rounded-xl text-[10px] font-bold hover:bg-red-100 shadow-sm flex flex-col items-center justify-center transition">
+                        <span class="text-sm mb-0.5">⏹</span>
+                        <span>จบงาน</span>
+                    </button>
+                    ${fileBtn}
+                </div>`;
+            } else {
+                buttonSection = `
+                <div class="flex gap-2 mt-4">
+                    <div class="w-1/4"></div>
+                    ${fileBtn}
+                </div>`;
+            }
+
+            // 5. Card HTML
+            return `
+                <div class="bg-white p-5 rounded-2xl card-shadow border-l-4 ${mode === 'active' ? 'border-green-500' : 'border-gray-500'} relative mb-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full font-medium tracking-wide">${t.type}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded ${statusClass}">${statusText}</span>
+                    </div>
+
+                    <div class="text-lg font-bold text-gray-800 leading-tight mb-3">${t.topic}</div>
+
+                    <div class="text-xs text-gray-600 border-t border-gray-100 pt-3">
+                        <div class="flex flex-wrap items-center mb-1">
+                            <span class="font-semibold text-gray-700">📅 ${dateStr}</span>
+                            ${countdownHTML}
+                        </div>
+                        <div class="text-xl font-extrabold text-blue-800 tracking-wide font-mono">
+                            ⏰ ${timeRangeStr}
+                        </div>
+                    </div>
+
+                    <div class="text-[9px] text-gray-300 text-right mt-1 font-mono">ID: ${t.id}</div>
+                    ${buttonSection}
+                </div>
+            `;
+        }
+
+        // --- ACTIONS ---
+
+        // 1. Submit Registration
+        document.getElementById('regForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            toggleLoading(true);
+            const payload = {
+                userId: userProfile.userId,
+                name: document.getElementById('rName').value,
+                position: document.getElementById('rPos').value,
+                department: document.getElementById('rDept').value,
+                organization: document.getElementById('rOrg').value,
+                email: document.getElementById('rEmail').value
+            };
+            await api('register_user', payload);
+            location.reload();
+        });
+
+        // 2. Submit Task
         document.getElementById('taskForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             toggleLoading(true);
-            
+
             let fileData = "", fileName = "", mimeType = "";
             const fileInput = document.getElementById('tFile');
             if (fileInput.files.length > 0) {
                 const f = fileInput.files[0];
+                if(f.size > 5 * 1024 * 1024) { alert("ไฟล์ใหญ่เกิน 5MB"); toggleLoading(false); return; }
                 fileData = await toBase64(f);
                 fileName = f.name; mimeType = f.type;
             }
@@ -201,17 +364,21 @@
                 timeEnd: document.getElementById('tEnd').value,
                 fileData, fileName, mimeType
             };
-            
-            await api('save_task', payload);
-            alert("บันทึกเรียบร้อย");
+
+            const res = await api('save_task', payload);
             toggleLoading(false);
-            goHome();
+            if(res.status === 'success') {
+                alert("บันทึกเรียบร้อย!");
+                e.target.reset();
+                goHome();
+            } else {
+                alert("Error: " + res.message);
+            }
         });
 
-        // 2. โหลดงาน (Active / Ended)
+        // 3. Load Tasks
         async function loadMyTasks(mode) {
-            document.getElementById('menu-section').classList.add('hidden');
-            document.getElementById('list-section').classList.remove('hidden');
+            openPage('list-section');
             document.getElementById('list-title').innerText = (mode === 'active') ? "งานของฉัน" : "ประวัติงานที่สิ้นสุด";
             
             toggleLoading(true);
@@ -221,133 +388,58 @@
             const container = document.getElementById('task-container');
             container.innerHTML = "";
 
-            // กรองงานและเรียงลำดับ
-            let tasks = res.tasks.filter(t => {
-                if (mode === 'active') return t.status !== 'Ended';
-                else return t.status === 'Ended';
-            });
-
-            // เรียงลำดับ: ถ้า active เรียงตามวันเริ่มใกล้สุด, ถ้า ended เรียงตามวันเริ่ม
-            tasks.sort((a, b) => new Date(a.start) - new Date(b.start));
+            let tasks = res.tasks || [];
+            tasks = tasks.filter(t => (mode === 'active' ? t.status !== 'Ended' : t.status === 'Ended'));
+            tasks.sort((a, b) => new Date(a.start) - new Date(b.start)); // เรียงตามวันเริ่ม
 
             if (tasks.length === 0) {
-                container.innerHTML = "<div class='text-center text-gray-400 mt-10'>ไม่มีรายการ</div>";
+                container.innerHTML = `
+                    <div class='text-center text-gray-400 mt-20 flex flex-col items-center'>
+                        <span class="text-4xl mb-2 opacity-30">📭</span>
+                        <span>ไม่มีรายการงาน</span>
+                    </div>`;
                 return;
             }
 
-            tasks.forEach(t => {
-                const card = createCard(t, mode);
-                container.innerHTML += card;
-            });
+            tasks.forEach(t => container.innerHTML += createCard(t, mode));
         }
 
-        // 3. สร้างการ์ดงาน (Card Generator)
-        function createCard(t, mode) {
-            // จัดการวันที่ (15 ธันวาคม 2568 (จันทร์))
-            const startDate = new Date(t.start);
-            const dateStr = startDate.toLocaleDateString('th-TH', { 
-                day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' 
-            });
-
-            // คำนวณ Countdown
-            let countdownHTML = "";
-            let statusText = "Pending";
-            let statusClass = "text-yellow-600 bg-yellow-100";
-            const now = new Date();
-
-            if (mode === 'active') {
-                const diffTime = startDate - now;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-
-                // สถานะ Active/Pending
-                if (now >= startDate) {
-                    statusText = "Active";
-                    statusClass = "text-blue-600 bg-blue-100";
-                }
-
-                // ข้อความนับถอยหลัง
-                if (diffDays > 0) {
-                    if (diffDays <= 3) {
-                        countdownHTML = `<span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded ml-2">เหลือเวลาอีก ${diffDays} วัน</span>`;
-                    } else {
-                        countdownHTML = `<span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded ml-2">อีก ${diffDays} วัน</span>`;
-                    }
-                }
-            } else {
-                statusText = "Ended";
-                statusClass = "text-gray-600 bg-gray-200";
-            }
-
-            // ปุ่ม End Task (เฉพาะหน้า Active)
-            const endBtn = mode === 'active' 
-                ? `<button onclick="endTask('${t.id}')" class="w-full mt-3 bg-red-100 text-red-600 py-2 rounded-lg text-sm font-bold hover:bg-red-200 transition">⏹ กดจบงาน</button>` 
-                : "";
-
-            // ปุ่มดูไฟล์
-            const fileBtn = (t.file && t.file.includes('http')) 
-                ? `<a href="${t.file}" target="_blank" class="block text-center w-full mt-2 border border-blue-500 text-blue-500 py-2 rounded-lg text-sm font-bold hover:bg-blue-50">📎 ดูไฟล์แนบ</a>` 
-                : "";
-
-            // HTML การ์ด
-            return `
-                <div class="bg-white p-5 rounded-2xl card-shadow border-l-4 ${mode === 'active' ? 'border-green-500' : 'border-gray-500'} relative">
-                    <div class="absolute top-4 right-4 text-xs font-bold px-2 py-1 rounded ${statusClass}">
-                        ${statusText}
-                    </div>
-                    <div class="text-xs text-gray-400 mb-1">${t.type}</div>
-                    <div class="text-lg font-bold text-gray-800 pr-16">${t.topic}</div>
-                    <div class="text-sm text-gray-600 mt-2 mb-2">
-                        📅 ${dateStr} ${countdownHTML}
-                    </div>
-                    <div class="text-xs text-gray-400">ID: ${t.id}</div>
-                    ${fileBtn}
-                    ${endBtn}
-                </div>
-            `;
-        }
-
-        // 4. จบงาน
+        // 4. End Task
         async function endTask(taskId) {
-            if(!confirm("ยืนยันการจบงานนี้?")) return;
+            if(!confirm("ต้องการจบงานนี้ใช่หรือไม่?")) return;
             toggleLoading(true);
-            await api('end_task', { taskId: taskId });
+            await api('end_task', { taskId });
             toggleLoading(false);
-            loadMyTasks('active'); // รีโหลดหน้าเดิม
+            loadMyTasks('active');
         }
 
-        // 5. ลงทะเบียน
-        document.getElementById('regForm').addEventListener('submit', async(e)=>{
-            e.preventDefault();
-            toggleLoading(true);
-            await api('register_user', {
-                userId: userProfile.userId,
-                name: document.getElementById('rName').value,
-                position: document.getElementById('rPos').value,
-                department: document.getElementById('rDept').value,
-                organization: document.getElementById('rOrg').value,
-                email: document.getElementById('rEmail').value
-            });
-            toggleLoading(false);
-            location.reload();
-        });
-
-        // --- UTILS ---
+        // --- UTILITIES ---
         async function api(action, data) {
-            const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action, ...data }) });
-            return await res.json();
+            try {
+                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action, ...data }) });
+                return await res.json();
+            } catch (err) {
+                alert("API Error: " + err);
+                return { status: 'error' };
+            }
         }
         function toggleLoading(show) { document.getElementById('loading').classList.toggle('hidden', !show); }
-        function goHome() {
-            document.getElementById('form-section').classList.add('hidden');
-            document.getElementById('list-section').classList.add('hidden');
-            document.getElementById('menu-section').classList.remove('hidden');
-            document.getElementById('profile-section').classList.remove('hidden');
+        function openPage(pageId) {
+            ['form-section', 'list-section', 'menu-section', 'register-section'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(pageId);
+            if(target) target.classList.remove('hidden');
+            
+            // ถ้าไม่ใช่หน้าแรก ให้ซ่อน Profile
+            if(pageId === 'menu-section') {
+                document.getElementById('profile-section').classList.remove('hidden');
+            } else {
+                document.getElementById('profile-section').classList.add('hidden');
+            }
         }
-        function openTaskForm() {
-            document.getElementById('menu-section').classList.add('hidden');
-            document.getElementById('profile-section').classList.add('hidden');
-            document.getElementById('form-section').classList.remove('hidden');
-        }
+        function goHome() { openPage('menu-section'); }
         const toBase64 = file => new Promise((res, rej) => {
             const r = new FileReader();
             r.readAsDataURL(file);
@@ -355,6 +447,7 @@
             r.onerror = rej;
         });
 
+        // Run
         main();
     </script>
 </body>
